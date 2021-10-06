@@ -1,7 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AccountService } from '../Services/account.service';
+import { AccountService } from '../services/account.service';
 import { User } from '../models/user';
+import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-nav',
@@ -13,7 +15,9 @@ export class NavComponent implements OnInit, OnDestroy {
   model: any = {};
   currentUser$: Observable<User>;
 
-  constructor(private accountService: AccountService) { }
+  constructor(private accountService: AccountService,
+    private router: Router,
+    private toastr: ToastrService) { }
 
   ngOnInit(): void {
     this.currentUser$ = this.accountService.currentUser$;
@@ -26,18 +30,18 @@ export class NavComponent implements OnInit, OnDestroy {
   Login() {
 
     this.accountService.Login(this.model).subscribe(response => {
-
+      this.router.navigate(['/members']);
     },
       error => {
         console.log(error);
-
+        this.toastr.error(error.error);
       });
 
   }
 
   Logout() {
     this.accountService.Logout();
-
+    this.router.navigate(['/home']);
   }
 
 }

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { AccountService } from './Services/account.service';
+import { AccountService } from './services/account.service';
 import { User } from './models/user'
 @Component({
   selector: 'app-root',
