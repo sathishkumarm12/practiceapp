@@ -32,10 +32,11 @@ export class NavComponent implements OnInit, OnDestroy {
     this.accountService.Login(this.model).subscribe(response => {
       this.router.navigate(['/members']);
     },
-      error => {
-        console.log(error);
-        this.toastr.error(error.error);
-      });
+      //   error => {
+      //     console.log(error);
+      //     this.toastr.error(error.error);
+      //   }
+    );
 
   }
 
