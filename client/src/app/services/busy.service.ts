@@ -16,8 +16,7 @@ export class BusyService {
       color: '#5abff0',
       bdColor: 'rgba(0, 0, 0, 0.8)',
       fullScreen: true,
-      size: 'large',
-
+      size: 'large'
     });
   }
 

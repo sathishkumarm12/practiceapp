@@ -45,7 +45,8 @@ namespace API.Controllers
             return new UserDTO()
             {
                 Username = user.UserName,
-                Token = tokenService.CreateToken(user)
+                Token = tokenService.CreateToken(user),
+                PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain == true)?.Url
             };
         }
 
@@ -57,7 +58,9 @@ namespace API.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<UserDTO>> Login(LoginDTO loginDTO)
         {
-            var user = await context.Users.SingleOrDefaultAsync(x => x.UserName == loginDTO.username.ToLower());
+            var user = await context.Users
+            .Include(p => p.Photos)
+            .SingleOrDefaultAsync(x => x.UserName == loginDTO.username.ToLower());
 
             if (user == null)
                 return Unauthorized("Invalid user name");
@@ -74,7 +77,8 @@ namespace API.Controllers
             return new UserDTO()
             {
                 Username = user.UserName,
-                Token = tokenService.CreateToken(user)
+                Token = tokenService.CreateToken(user),
+                PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain == true)?.Url
             };
         }
     }
