@@ -1,14 +1,50 @@
-<form #registerForm="ngForm" (ngSubmit)="register()" autocomplete="off">
+<form [formGroup]="registerForm" (ngSubmit)="register()" autocomplete="off">
   <h2 class="text-center text-primary">Sign up</h2>
   <hr>
+
   <div class="form-group">
-    <input type="text" class="form-control" [(ngModel)]="model.username" name="username" placeholder="Username">
+    <label for="" class="control-label mr-5">I am a: </label>
+    <label for="" class="radio-inline">
+      <input type="radio" value="male" formControlName="gender"> Male
+    </label>
+    <label for="" class="radio-inline">
+      <input type="radio" value="female" formControlName="gender" class="ml-3"> Female
+    </label>
   </div>
-  <div class="form-group">
-    <input type="password" class="form-control" [(ngModel)]="model.password" name="password" placeholder="Password">
+
+  <app-text-input [label]='"Username"' [formControl]="$any(registerForm.controls)['username']"></app-text-input>
+  <app-text-input [label]='"Known As"' [formControl]="$any(registerForm.controls)['knowAs']"></app-text-input>
+  <app-date-input [label]='"Date of Birth"' [maxDate]="maxDate"
+    [formControl]="$any(registerForm.controls)['dateOfBirth']" type='date'>
+  </app-date-input>
+  <app-text-input [label]='"City"' [formControl]="$any(registerForm.controls)['city']"></app-text-input>
+  <app-text-input [label]='"Country"' [formControl]="$any(registerForm.controls)['country']"></app-text-input>
+
+
+  <app-text-input [type]='"password"' [label]='"Password"' [formControl]="$any(registerForm.controls)['password']">
+  </app-text-input>
+  <app-text-input [type]='"password"' [label]='"Confirm password"'
+    [formControl]="$any(registerForm.controls)['confirmPassword']">
+  </app-text-input>
+
+  <div class="row" *ngIf="validationErrors.length > 0">
+    <ul class="text-danger">
+      <li *ngFor="let error of validationErrors">{{error}}</li>
+    </ul>
   </div>
+
   <div class="form-group text-center">
-    <button class="btn btn-success" type="submit">Register</button>
+    <button class="btn btn-success" type="submit" [disabled]="!registerForm.valid">Register</button>
     <button class="btn btn-default" type="button" (click)='cancel()'>Cancel</button>
   </div>
 </form>
+
+<!-- <div class="row col-12">
+  <p>
+    Form Values : <code> {{registerForm.value | json}}</code>
+  </p>
+
+  <p>
+    Form Status : <code> {{registerForm.status | json}}</code>
+  </p>
+</div> -->
