@@ -42,7 +42,7 @@ export class NavComponent implements OnInit, OnDestroy {
 
   Logout() {
     this.accountService.Logout();
-    this.router.navigate(['/home']);
+    this.router.navigateByUrl('/');
   }
 
 }
