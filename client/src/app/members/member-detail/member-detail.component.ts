@@ -1,9 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgxGalleryOptions, NgxGalleryImage, NgxGalleryAnimation } from '@kolkov/ngx-gallery';
+import { TabDirective, TabsetComponent } from 'ngx-bootstrap/tabs';
 import { take } from 'rxjs/operators';
 import { Member } from 'src/app/models/member';
+import { Message } from 'src/app/models/message';
 import { MembersService } from 'src/app/services/members.service';
+import { MessageService } from 'src/app/services/message.service';
 
 @Component({
   selector: 'app-member-detail',
@@ -13,14 +16,22 @@ import { MembersService } from 'src/app/services/members.service';
 export class MemberDetailComponent implements OnInit {
 
   member: Member;
+  messages: Message[] = [];
+
   galleryOptions: NgxGalleryOptions[];
   galleryImages: NgxGalleryImage[];
 
-  constructor(private memberService: MembersService, private activeRoute: ActivatedRoute) { }
+  @ViewChild('memberTabs', { static: true }) memberTabs: TabsetComponent;
+  activeTab: TabDirective;
+
+  constructor(private memberService: MembersService, private activeRoute: ActivatedRoute,
+    private messageService: MessageService) { }
 
   ngOnInit(): void {
-    const username = this.activeRoute.snapshot.paramMap.get('username');
-    this.loadMember(username);
+    //const username = this.activeRoute.snapshot.paramMap.get('username');
+    //this.loadMember(username);
+
+    this.activeRoute.data.subscribe(data => this.member = data.member);
 
     this.galleryOptions = [{
       width: '500px',
@@ -31,7 +42,11 @@ export class MemberDetailComponent implements OnInit {
       preview: false
     }];
 
+    this.activeRoute.queryParams.subscribe(params => {
+      params?.tab ? this.selectTab(params.tab) : this.selectTab(0);
+    });
 
+    this.galleryImages = this.getImages();
   }
 
   getImages(): NgxGalleryImage[] {
@@ -48,9 +63,30 @@ export class MemberDetailComponent implements OnInit {
     return imageUrls;
   }
 
-  loadMember(username: string) {
-    this.memberService.getMember(username).pipe(take(1)).subscribe(
-      memberData => { this.member = memberData; this.galleryImages = this.getImages(); }
+  // loadMember(username: string) {
+  //   this.memberService.getMember(username).pipe(take(1)).subscribe(
+  //     memberData => { this.member = memberData; }
+  //   );
+  // }
+
+  onTabActivated(data: TabDirective) {
+    this.activeTab = data;
+
+    if (this.activeTab.heading === 'Messages' && this.messages.length === 0) {
+      this.loadMessages();
+    }
+  }
+
+  selectTab(tabId: number) {
+    this.memberTabs.tabs[tabId].active = true;
+  }
+
+  loadMessages() {
+
+    this.messageService.getMessageThread(this.member.userName).subscribe(
+      response => {
+        this.messages = response;
+      }
     );
   }
 
