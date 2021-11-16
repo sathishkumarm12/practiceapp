@@ -74,7 +74,7 @@ namespace API.Data
             {
                 foreach (var message in unreadMessage)
                 {
-                    message.DateRead = DateTime.Now;
+                    message.DateRead = DateTime.UtcNow;
                 }
                 await context.SaveChangesAsync();
             }

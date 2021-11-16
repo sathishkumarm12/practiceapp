@@ -4,6 +4,7 @@ import { ReplaySubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { User } from '../models/user';
+import { PresenceService } from './presence.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,7 @@ export class AccountService {
   private currentUserSource = new ReplaySubject<User>(1);
   currentUser$ = this.currentUserSource.asObservable();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private presenceService: PresenceService) { }
 
   Login(model: any) {
     return this.http.post(this.baseUrl + 'account/login', model)
@@ -24,6 +25,7 @@ export class AccountService {
           (data: User) => {
             if (data) {
               this.setCurrentUser(data);
+              this.presenceService.createHubConnection(data);
             }
           }
         )
@@ -41,6 +43,7 @@ export class AccountService {
   Logout() {
     localStorage.clear();
     this.currentUserSource.next(null);
+    this.presenceService.stopHubConnection();
   }
 
   Register(model: any) {
@@ -49,6 +52,7 @@ export class AccountService {
         (data: User) => {
           if (data) {
             this.setCurrentUser(data);
+            this.presenceService.createHubConnection(data);
           }
 
           return data;
