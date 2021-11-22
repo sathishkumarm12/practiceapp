@@ -41,7 +41,8 @@ namespace API.Data
 
         public async Task<PagedList<MessageDTO>> GetMessagesForUser(MessageParams messageParams)
         {
-            var query = context.Messages.OrderByDescending(m => m.MessageSent).AsQueryable();
+            var query = context.Messages.OrderByDescending(m => m.MessageSent)
+            .ProjectTo<MessageDTO>(mapper.ConfigurationProvider).AsQueryable();
 
             query = messageParams.Container switch
             {
@@ -51,9 +52,7 @@ namespace API.Data
                                         && u.DateRead == null),
             };
 
-            var messages = query.ProjectTo<MessageDTO>(mapper.ConfigurationProvider);
-
-            return await PagedList<MessageDTO>.CreateAsync(messages, messageParams.PageNumber, messageParams.PageSize);
+            return await PagedList<MessageDTO>.CreateAsync(query, messageParams.PageNumber, messageParams.PageSize);
         }
 
         public async Task<IEnumerable<MessageDTO>> GetMessageThread(string currentUsername, string recipientUsername)
@@ -65,9 +64,11 @@ namespace API.Data
                 m.Recipient.UserName == currentUsername && m.RecipientDeleted == false && m.Sender.UserName == recipientUsername
                 ||
                 m.Recipient.UserName == recipientUsername && m.SenderDeleted == false && m.Sender.UserName == currentUsername
-                ).OrderBy(o => o.MessageSent).ToListAsync();
+                ).OrderBy(o => o.MessageSent)
+                .ProjectTo<MessageDTO>(mapper.ConfigurationProvider)
+                .ToListAsync();
 
-            var unreadMessage = messages.Where(m => m.DateRead == null && m.Recipient.UserName == currentUsername)
+            var unreadMessage = messages.Where(m => m.DateRead == null && m.RecipientUsername == currentUsername)
             .ToList();
 
             if (unreadMessage.Any())
@@ -76,15 +77,11 @@ namespace API.Data
                 {
                     message.DateRead = DateTime.UtcNow;
                 }
-                await context.SaveChangesAsync();
             }
 
-            return mapper.Map<IEnumerable<MessageDTO>>(messages);
+            return messages;
         }
 
-        public async Task<bool> SaveAllAsync()
-        {
-            return await context.SaveChangesAsync() > 0;
-        }
+
     }
 }

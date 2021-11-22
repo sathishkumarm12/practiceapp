@@ -13,15 +13,13 @@ namespace API.SignalR
 {
     public class MessageHub : Hub
     {
-        private readonly IMessageRepository messageRepository;
         private readonly IMapper mapper;
-        private readonly IUserRepository userRepository;
+        private readonly IUnitOfWork unitOfWork;
 
-        public MessageHub(IMessageRepository messageRepository, IMapper mapper, IUserRepository userRepository)
+        public MessageHub(IMapper mapper, IUnitOfWork unitOfWork)
         {
-            this.messageRepository = messageRepository;
             this.mapper = mapper;
-            this.userRepository = userRepository;
+            this.unitOfWork = unitOfWork;
         }
 
         public override async Task OnConnectedAsync()
@@ -32,8 +30,12 @@ namespace API.SignalR
             var groupName = GetGroupName(httpContext.User.Identity.Name, otherUser);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
-            var messages = await messageRepository.GetMessageThread(httpContext.User.Identity.Name, otherUser);
+            var messages = await unitOfWork.MessageRepository.GetMessageThread(httpContext.User.Identity.Name, otherUser);
 
+            if (unitOfWork.HasChanges())
+            {
+                await unitOfWork.Complete();
+            }
             await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messages);
         }
 
@@ -49,9 +51,9 @@ namespace API.SignalR
             if (username == createMessageDTO.RecipientUsername)
                 throw new HubException("Yoou cannot sent message to self");
 
-            var sender = await userRepository.GetUserByNameAsync(username);
+            var sender = await unitOfWork.UserRepository.GetUserByNameAsync(username);
 
-            var recipient = await userRepository.GetUserByNameAsync(createMessageDTO.RecipientUsername);
+            var recipient = await unitOfWork.UserRepository.GetUserByNameAsync(createMessageDTO.RecipientUsername);
 
             if (recipient == null)
                 throw new HubException("Recipient not found");
@@ -72,9 +74,9 @@ namespace API.SignalR
             //     message.DateRead = DateTime.Now;
             // }
 
-            messageRepository.AddMessage(message);
+            unitOfWork.MessageRepository.AddMessage(message);
 
-            if (await messageRepository.SaveAllAsync())
+            if (await unitOfWork.Complete())
             {
 
                 await Clients.Group(groupName).SendAsync("NewMessage", mapper.Map<MessageDTO>(message));

@@ -18,13 +18,13 @@ namespace API.helpers
             if (!resultContext.HttpContext.User.Identity.IsAuthenticated) return;
 
             var userId = resultContext.HttpContext.User.GetUserId();
-            var userRepo = resultContext.HttpContext.RequestServices.GetService<IUserRepository>();
-            var user = await userRepo.GetUserByIdAsync(userId);
+            var unitOfWork = resultContext.HttpContext.RequestServices.GetService<IUnitOfWork>();
+            var user = await unitOfWork.UserRepository.GetUserByIdAsync(userId);
 
-            user.LastActive = DateTime.Now;
+            user.LastActive = DateTime.UtcNow;
 
-            userRepo.Update(user);
-            await userRepo.SaveAllAsync();
+            unitOfWork.UserRepository.Update(user);
+            await unitOfWork.Complete();
         }
     }
 }
